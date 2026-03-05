@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { Plus, Edit2, Trash2, X, GripVertical, Upload, FileText, Search, FolderOpen, Copy, ExternalLink, Maximize2, Minimize2, LogOut } from 'lucide-react';
 import { createCategory, createPanel, deleteCategory, deletePanel, moveCategoryToPanel, createLink, updateLink, deleteLink, updateCategoryOrder, updateLinkOrder, importBookmarks, uploadPdfs, deleteLibraryItem, updateLibraryFolderOrder, updateLibraryItemOrder } from '@/app/actions';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
@@ -79,11 +79,12 @@ export default function Dashboard({ initialCategories, initialLibraryItems, init
     setCustomPanels(initialPanels);
   }, [initialPanels]);
 
-  const panels = Array.from(
-    new Set(['Work', 'Personal', 'Library', ...customPanels, activePanel, ...categories.map(c => c.panel)]),
+  const panels = useMemo(
+    () => Array.from(new Set(['Work', 'Personal', 'Library', ...customPanels, activePanel, ...categories.map(c => c.panel)])),
+    [activePanel, categories, customPanels],
   );
-  const categoryPanelOptions = panels.filter((panel) => panel !== 'Library');
-  const activeCategories = categories.filter(c => c.panel === activePanel);
+  const categoryPanelOptions = useMemo(() => panels.filter((panel) => panel !== 'Library'), [panels]);
+  const activeCategories = useMemo(() => categories.filter(c => c.panel === activePanel), [activePanel, categories]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -313,26 +314,59 @@ export default function Dashboard({ initialCategories, initialLibraryItems, init
     }
   };
 
-  const filteredLibraryItems = libraryItems.filter(item =>
-    item.name.toLowerCase().includes(librarySearch.toLowerCase()) ||
-    item.folder.toLowerCase().includes(librarySearch.toLowerCase())
+  const normalizedLibrarySearch = librarySearch.trim().toLowerCase();
+
+  const filteredLibraryItems = useMemo(
+    () =>
+      libraryItems.filter(item =>
+        item.name.toLowerCase().includes(normalizedLibrarySearch) ||
+        item.folder.toLowerCase().includes(normalizedLibrarySearch),
+      ),
+    [libraryItems, normalizedLibrarySearch],
   );
 
-  // Compute folder order from items
-  const folderOrderMap = new Map<string, number>();
-  libraryItems.forEach(item => {
-    if (!folderOrderMap.has(item.folder)) {
-      folderOrderMap.set(item.folder, item.folderOrder);
-    }
-  });
+  const visibleLibraryItems = librarySearch ? filteredLibraryItems : libraryItems;
 
-  const libraryFolders = Array.from(new Set(filteredLibraryItems.map(item => item.folder)))
-    .sort((a, b) => (folderOrderMap.get(a) ?? 0) - (folderOrderMap.get(b) ?? 0));
+  const folderOrderMap = useMemo(() => {
+    const map = new Map<string, number>();
 
-  const getLibraryItemsForFolder = (folder: string) =>
-    (librarySearch ? filteredLibraryItems : libraryItems)
-      .filter(i => i.folder === folder)
-      .sort((a, b) => a.order - b.order);
+    libraryItems.forEach(item => {
+      if (!map.has(item.folder)) {
+        map.set(item.folder, item.folderOrder);
+      }
+    });
+
+    return map;
+  }, [libraryItems]);
+
+  const libraryFolders = useMemo(
+    () =>
+      Array.from(new Set(visibleLibraryItems.map(item => item.folder))).sort(
+        (a, b) => (folderOrderMap.get(a) ?? 0) - (folderOrderMap.get(b) ?? 0),
+      ),
+    [folderOrderMap, visibleLibraryItems],
+  );
+
+  const libraryItemsByFolder = useMemo(() => {
+    const grouped = new Map<string, LibraryItem[]>();
+
+    visibleLibraryItems.forEach(item => {
+      const items = grouped.get(item.folder);
+      if (items) {
+        items.push(item);
+      } else {
+        grouped.set(item.folder, [item]);
+      }
+    });
+
+    grouped.forEach((items) => {
+      items.sort((a, b) => a.order - b.order);
+    });
+
+    return grouped;
+  }, [visibleLibraryItems]);
+
+  const getLibraryItemsForFolder = (folder: string) => libraryItemsByFolder.get(folder) ?? [];
 
   const onLibraryDragEnd = async (result: DropResult) => {
     const { source, destination, type } = result;
@@ -631,9 +665,9 @@ export default function Dashboard({ initialCategories, initialLibraryItems, init
 
   return (
     <DragDropContext onDragEnd={handleDragEnd}>
-      <div className="min-h-screen flex text-sm transition-colors duration-200">
+      <div className="h-screen overflow-hidden flex text-sm transition-colors duration-200">
       {/* Sidebar - Slack-style aubergine/dark */}
-      <aside className="w-60 shrink-0 bg-slack-aubergine dark:bg-[#19171d] flex flex-col text-white/80">
+      <aside className="w-60 h-screen shrink-0 bg-slack-aubergine dark:bg-[#19171d] flex flex-col text-white/80">
         <div className="px-4 pt-4 pb-3 border-b border-white/10">
           <h1 className="text-lg font-black text-white tracking-tight">Kerv Command Hub</h1>
           <div className="mt-2">
@@ -873,92 +907,96 @@ export default function Dashboard({ initialCategories, initialLibraryItems, init
                 <Droppable droppableId="library-folders" type="library-folder">
                   {(provided) => (
                     <div ref={provided.innerRef} {...provided.droppableProps} className="space-y-6">
-                      {libraryFolders.map((folder, folderIndex) => (
-                        <Draggable key={folder} draggableId={`folder-${folder}`} index={folderIndex} isDragDisabled={!!librarySearch}>
-                          {(provided) => (
-                            <div ref={provided.innerRef} {...provided.draggableProps}>
-                              <div className="flex items-center gap-2 mb-2 group/folder-header">
-                                <div
-                                  {...provided.dragHandleProps}
-                                  className={`text-ink-muted hover:text-ink-secondary cursor-grab active:cursor-grabbing transition-opacity ${librarySearch ? 'hidden' : 'opacity-0 group-hover/folder-header:opacity-100'}`}
-                                >
-                                  <GripVertical size={14} />
-                                </div>
-                                <FolderOpen size={14} className="text-slack-yellow" />
-                                <h3 className="text-xs font-bold text-ink-secondary uppercase tracking-wide">{folder}</h3>
-                                <span className="text-[11px] text-ink-muted">
-                                  ({getLibraryItemsForFolder(folder).length})
-                                </span>
-                              </div>
+                      {libraryFolders.map((folder, folderIndex) => {
+                        const folderItems = getLibraryItemsForFolder(folder);
 
-                              <Droppable droppableId={`lib-${folder}`} type="library-item">
-                                {(provided) => (
-                                  <div ref={provided.innerRef} {...provided.droppableProps} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 min-h-10">
-                                    {getLibraryItemsForFolder(folder).map((item, itemIndex) => (
-                                      <Draggable key={item.id} draggableId={item.id} index={itemIndex} isDragDisabled={!!librarySearch}>
-                                        {(provided) => (
-                                          <div
-                                            ref={provided.innerRef}
-                                            {...provided.draggableProps}
-                                            className="group flex items-center gap-2.5 p-2.5 rounded-lg border border-line bg-surface dark:bg-surface hover:bg-surface-hover hover:shadow-sm transition-all"
-                                          >
-                                            <div
-                                              {...provided.dragHandleProps}
-                                              className={`text-ink-muted hover:text-ink-secondary cursor-grab active:cursor-grabbing transition-opacity shrink-0 ${librarySearch ? 'hidden' : 'opacity-0 group-hover:opacity-100'}`}
-                                            >
-                                              <GripVertical size={14} />
-                                            </div>
-                                            <FileText size={18} className="text-slack-red shrink-0" />
-                                            <div className="flex-1 min-w-0">
-                                              <button
-                                                onClick={() => setViewingPdf(item)}
-                                                className="block truncate text-sm text-ink hover:text-slack-blue transition-colors text-left w-full font-medium"
-                                                title={`View ${item.name}`}
-                                              >
-                                                {item.name}
-                                              </button>
-                                            </div>
-                                            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                              <a
-                                                href={item.viewUrl}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="p-1 rounded hover:bg-background text-ink-muted hover:text-ink transition-colors"
-                                                title="Open in new tab"
-                                              >
-                                                <ExternalLink size={13} />
-                                              </a>
-                                              <button
-                                                onClick={async () => { await navigator.clipboard.writeText(item.viewUrl); }}
-                                                className="p-1 rounded hover:bg-background text-ink-muted hover:text-ink transition-colors"
-                                                title="Copy URL"
-                                              >
-                                                <Copy size={13} />
-                                              </button>
-                                              <button
-                                                onClick={async () => {
-                                                  if (confirm(`Remove "${item.name}" from library?`)) {
-                                                    await deleteLibraryItem(item.id);
-                                                  }
-                                                }}
-                                                className="p-1 rounded hover:bg-background text-ink-muted hover:text-slack-red transition-colors"
-                                                title="Remove from library"
-                                              >
-                                                <Trash2 size={13} />
-                                              </button>
-                                            </div>
-                                          </div>
-                                        )}
-                                      </Draggable>
-                                    ))}
-                                    {provided.placeholder}
+                        return (
+                          <Draggable key={folder} draggableId={`folder-${folder}`} index={folderIndex} isDragDisabled={!!librarySearch}>
+                            {(provided) => (
+                              <div ref={provided.innerRef} {...provided.draggableProps}>
+                                <div className="flex items-center gap-2 mb-2 group/folder-header">
+                                  <div
+                                    {...provided.dragHandleProps}
+                                    className={`text-ink-muted hover:text-ink-secondary cursor-grab active:cursor-grabbing transition-opacity ${librarySearch ? 'hidden' : 'opacity-0 group-hover/folder-header:opacity-100'}`}
+                                  >
+                                    <GripVertical size={14} />
                                   </div>
-                                )}
-                              </Droppable>
-                            </div>
-                          )}
-                        </Draggable>
-                      ))}
+                                  <FolderOpen size={14} className="text-slack-yellow" />
+                                  <h3 className="text-xs font-bold text-ink-secondary uppercase tracking-wide">{folder}</h3>
+                                  <span className="text-[11px] text-ink-muted">
+                                    ({folderItems.length})
+                                  </span>
+                                </div>
+
+                                <Droppable droppableId={`lib-${folder}`} type="library-item">
+                                  {(provided) => (
+                                    <div ref={provided.innerRef} {...provided.droppableProps} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 min-h-10">
+                                      {folderItems.map((item, itemIndex) => (
+                                        <Draggable key={item.id} draggableId={item.id} index={itemIndex} isDragDisabled={!!librarySearch}>
+                                          {(provided) => (
+                                            <div
+                                              ref={provided.innerRef}
+                                              {...provided.draggableProps}
+                                              className="group flex items-center gap-2.5 p-2.5 rounded-lg border border-line bg-surface dark:bg-surface hover:bg-surface-hover hover:shadow-sm transition-all"
+                                            >
+                                              <div
+                                                {...provided.dragHandleProps}
+                                                className={`text-ink-muted hover:text-ink-secondary cursor-grab active:cursor-grabbing transition-opacity shrink-0 ${librarySearch ? 'hidden' : 'opacity-0 group-hover:opacity-100'}`}
+                                              >
+                                                <GripVertical size={14} />
+                                              </div>
+                                              <FileText size={18} className="text-slack-red shrink-0" />
+                                              <div className="flex-1 min-w-0">
+                                                <button
+                                                  onClick={() => setViewingPdf(item)}
+                                                  className="block truncate text-sm text-ink hover:text-slack-blue transition-colors text-left w-full font-medium"
+                                                  title={`View ${item.name}`}
+                                                >
+                                                  {item.name}
+                                                </button>
+                                              </div>
+                                              <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                <a
+                                                  href={item.viewUrl}
+                                                  target="_blank"
+                                                  rel="noopener noreferrer"
+                                                  className="p-1 rounded hover:bg-background text-ink-muted hover:text-ink transition-colors"
+                                                  title="Open in new tab"
+                                                >
+                                                  <ExternalLink size={13} />
+                                                </a>
+                                                <button
+                                                  onClick={async () => { await navigator.clipboard.writeText(item.viewUrl); }}
+                                                  className="p-1 rounded hover:bg-background text-ink-muted hover:text-ink transition-colors"
+                                                  title="Copy URL"
+                                                >
+                                                  <Copy size={13} />
+                                                </button>
+                                                <button
+                                                  onClick={async () => {
+                                                    if (confirm(`Remove "${item.name}" from library?`)) {
+                                                      await deleteLibraryItem(item.id);
+                                                    }
+                                                  }}
+                                                  className="p-1 rounded hover:bg-background text-ink-muted hover:text-slack-red transition-colors"
+                                                  title="Remove from library"
+                                                >
+                                                  <Trash2 size={13} />
+                                                </button>
+                                              </div>
+                                            </div>
+                                          )}
+                                        </Draggable>
+                                      ))}
+                                      {provided.placeholder}
+                                    </div>
+                                  )}
+                                </Droppable>
+                              </div>
+                            )}
+                          </Draggable>
+                        );
+                      })}
                       {provided.placeholder}
                     </div>
                   )}
