@@ -1,9 +1,8 @@
 'use server';
 
-import { createAdminClient, createSessionClient } from '@/lib/appwrite';
+import { createAdminClient, createSessionClient, ID } from '@/lib/appwrite';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
-import { ID } from 'appwrite';
 
 const SIGNUP_ACCESS_CODES = (process.env.NEXT_PUBLIC_SIGNUP_ACCESS_CODES || '').split(',').filter(Boolean);
 
