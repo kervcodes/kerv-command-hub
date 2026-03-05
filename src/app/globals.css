@@ -3,23 +3,23 @@
 @variant dark (&:is(.dark, .dark *));
 
 :root {
-  --background: #f8f8f8;
-  --foreground: #1d1c1d;
-  --sidebar-bg: #3F0E40;
-  --sidebar-hover: #350d36;
-  --sidebar-active: #1164A3;
-  --sidebar-text: #cfc3cf;
-  --sidebar-text-bright: #ffffff;
-  --accent: #1264a3;
-  --accent-hover: #0b4f8a;
-  --green: #007a5a;
-  --green-hover: #006149;
+  --background: #f2f3f5;
+  --foreground: #1f2328;
+  --sidebar-bg: #f7f8fa;
+  --sidebar-hover: #eceff3;
+  --sidebar-active: #ffffff;
+  --sidebar-text: #5f6b7a;
+  --sidebar-text-bright: #1f2328;
+  --accent: #2f80ed;
+  --accent-hover: #1f6fd8;
+  --green: #1ea76a;
+  --green-hover: #18955d;
   --surface: #ffffff;
-  --surface-hover: #f0edee;
-  --border: #ddd5d9;
-  --text-primary: #1d1c1d;
-  --text-secondary: #616061;
-  --text-muted: #9e9d9f;
+  --surface-hover: #f6f7f9;
+  --border: #e3e7ee;
+  --text-primary: #1f2328;
+  --text-secondary: #4f5b67;
+  --text-muted: #7a8794;
 }
 
 @theme inline {
@@ -31,14 +31,14 @@
   --color-ink: var(--text-primary);
   --color-ink-secondary: var(--text-secondary);
   --color-ink-muted: var(--text-muted);
-  --color-slack-purple: #4A154B;
-  --color-slack-aubergine: #3F0E40;
-  --color-slack-hover: #350d36;
-  --color-slack-active: #4c2f4e;
-  --color-slack-blue: #1264a3;
-  --color-slack-blue-hover: #0b4f8a;
-  --color-slack-green: #007a5a;
-  --color-slack-green-hover: #006149;
+  --color-slack-purple: #eef1f6;
+  --color-slack-aubergine: #f7f8fa;
+  --color-slack-hover: #eceff3;
+  --color-slack-active: #ffffff;
+  --color-slack-blue: #2f80ed;
+  --color-slack-blue-hover: #1f6fd8;
+  --color-slack-green: #1ea76a;
+  --color-slack-green-hover: #18955d;
   --color-slack-yellow: #e8912d;
   --color-slack-red: #e01e5a;
   --font-sans: var(--font-lato), system-ui, -apple-system, sans-serif;
@@ -46,23 +46,23 @@
 }
 
 .dark {
-  --background: #1a1d21;
-  --foreground: #d1d2d3;
-  --sidebar-bg: #19171d;
-  --sidebar-hover: #27242c;
-  --sidebar-active: #1164A3;
-  --sidebar-text: #9e9ea6;
-  --sidebar-text-bright: #d1d2d3;
-  --accent: #1d9bd1;
-  --accent-hover: #1890c4;
-  --green: #2bac76;
-  --green-hover: #249e6b;
-  --surface: #222529;
-  --surface-hover: #2c2d31;
-  --border: #393b40;
-  --text-primary: #d1d2d3;
-  --text-secondary: #ababad;
-  --text-muted: #7a7b7e;
+  --background: #f2f3f5;
+  --foreground: #1f2328;
+  --sidebar-bg: #f7f8fa;
+  --sidebar-hover: #eceff3;
+  --sidebar-active: #ffffff;
+  --sidebar-text: #5f6b7a;
+  --sidebar-text-bright: #1f2328;
+  --accent: #2f80ed;
+  --accent-hover: #1f6fd8;
+  --green: #1ea76a;
+  --green-hover: #18955d;
+  --surface: #ffffff;
+  --surface-hover: #f6f7f9;
+  --border: #e3e7ee;
+  --text-primary: #1f2328;
+  --text-secondary: #4f5b67;
+  --text-muted: #7a8794;
 }
 
 body {

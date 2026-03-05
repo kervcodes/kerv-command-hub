@@ -5,8 +5,6 @@ import { Plus, Edit2, Trash2, X, GripVertical, Upload, FileText, Search, FolderO
 import { createCategory, createPanel, deleteCategory, deletePanel, moveCategoryToPanel, createLink, updateLink, deleteLink, updateCategoryOrder, updateLinkOrder, importBookmarks, uploadPdfs, deleteLibraryItem, updateLibraryFolderOrder, updateLibraryItemOrder } from '@/app/actions';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
 
-import { ThemeToggle } from './ThemeToggle';
-
 type Link = {
   id: string;
   name: string;
@@ -670,18 +668,14 @@ export default function Dashboard({ initialCategories, initialLibraryItems, init
   return (
     <DragDropContext onDragEnd={handleDragEnd}>
       <div className="h-screen overflow-hidden bg-background p-3 md:p-5">
-      <div className="h-full flex text-sm transition-colors duration-200 rounded-3xl border border-line bg-background/60 shadow-sm overflow-hidden">
-      {/* Sidebar - Slack-style aubergine/dark */}
-      <aside className="w-60 h-full shrink-0 bg-slack-aubergine dark:bg-slack-aubergine flex flex-col text-white/80">
-        <div className="px-4 pt-4 pb-3 border-b border-white/10">
-          <h1 className="text-lg font-black text-white tracking-tight">Kerv Command Hub</h1>
-          <div className="mt-2">
-            <ThemeToggle />
-          </div>
+      <div className="h-full flex text-sm transition-colors duration-200 rounded-3xl border border-line bg-background shadow-sm overflow-hidden">
+      <aside className="w-60 h-full shrink-0 bg-surface border-r border-line flex flex-col text-ink-secondary">
+        <div className="px-4 pt-4 pb-3 border-b border-line">
+          <h1 className="text-lg font-black text-ink tracking-tight">Kerv Command Hub</h1>
         </div>
 
         <nav className="flex-1 overflow-y-auto py-2 px-2">
-          <div className="text-[11px] font-bold uppercase tracking-wider text-white/40 px-2 py-2">Panels</div>
+          <div className="text-[11px] font-bold uppercase tracking-wider text-ink-muted px-2 py-2">Panels</div>
           {panels.map((panel, index) => (
             <Droppable
               key={panel}
@@ -694,18 +688,18 @@ export default function Dashboard({ initialCategories, initialLibraryItems, init
                   ref={provided.innerRef}
                   {...provided.droppableProps}
                   className={`group/tab flex items-center rounded-md transition-colors ${
-                    snapshot.isDraggingOver ? 'bg-white/10' : ''
+                    snapshot.isDraggingOver ? 'bg-surface-hover' : ''
                   }`}
                 >
                   <button
                     onClick={() => setActivePanel(panel)}
                     className={`flex-1 flex items-center gap-2 px-3 py-1.5 rounded-md text-[13px] transition-colors ${
                       activePanel === panel
-                        ? 'bg-slack-active dark:bg-white/10 text-white font-bold'
-                        : 'text-white/70 hover:bg-white/10'
+                        ? 'bg-background border border-line text-ink font-bold'
+                        : 'text-ink-secondary hover:bg-surface-hover'
                     }`}
                   >
-                    {index < 9 && <span className="text-[10px] opacity-40 font-mono">{index + 1}</span>}
+                    {index < 9 && <span className="text-[10px] text-ink-muted font-mono">{index + 1}</span>}
                     <span className="truncate">{panel === 'Library' ? '\uD83D\uDCDA Library' : `# ${panel.toLowerCase()}`}</span>
                   </button>
                   {activePanel === panel && panel !== 'Library' && (
@@ -724,7 +718,7 @@ export default function Dashboard({ initialCategories, initialLibraryItems, init
                           setActivePanel(fallbackPanel);
                         }
                       }}
-                      className="mr-1 text-white/30 hover:text-slack-red transition-colors opacity-0 group-hover/tab:opacity-100"
+                      className="mr-1 text-ink-muted hover:text-slack-red transition-colors opacity-0 group-hover/tab:opacity-100"
                       title={`Delete panel "${panel}"`}
                     >
                       <X size={12} />
@@ -745,7 +739,7 @@ export default function Dashboard({ initialCategories, initialLibraryItems, init
                 ref={provided.innerRef}
                 {...provided.droppableProps}
                 className={`mt-1 rounded-md transition-colors ${
-                  snapshot.isDraggingOver ? 'bg-white/10' : ''
+                  snapshot.isDraggingOver ? 'bg-surface-hover' : ''
                 }`}
               >
                 <button
@@ -754,7 +748,7 @@ export default function Dashboard({ initialCategories, initialLibraryItems, init
                     setNewPanelName('');
                     setAddPanelError('');
                   }}
-                  className="w-full flex items-center gap-2 px-3 py-1.5 rounded-md text-[13px] text-white/40 hover:text-white/70 hover:bg-white/10 transition-colors"
+                  className="w-full flex items-center gap-2 px-3 py-1.5 rounded-md text-[13px] text-ink-muted hover:text-ink-secondary hover:bg-surface-hover transition-colors"
                 >
                   <Plus size={14} />
                   <span>Add panel</span>
@@ -767,7 +761,7 @@ export default function Dashboard({ initialCategories, initialLibraryItems, init
 
         {/* Sidebar footer actions */}
         {activePanel !== 'Library' && (
-          <div className="p-3 border-t border-white/10 space-y-1">
+          <div className="p-3 border-t border-line space-y-1">
             <input
               type="file"
               accept=".html"
@@ -778,26 +772,26 @@ export default function Dashboard({ initialCategories, initialLibraryItems, init
             <button
               onClick={() => fileInputRef.current?.click()}
               disabled={isImporting}
-              className="w-full flex items-center gap-2 px-3 py-1.5 rounded-md text-[13px] text-white/60 hover:text-white hover:bg-white/10 transition-colors disabled:opacity-40"
+              className="w-full flex items-center gap-2 px-3 py-1.5 rounded-md text-[13px] text-ink-secondary hover:text-ink hover:bg-surface-hover transition-colors disabled:opacity-40"
             >
               <Upload size={14} />
               <span>{isImporting ? 'Importing...' : 'Import Bookmarks'}</span>
             </button>
             <button
               onClick={() => setIsAddingCategory(true)}
-              className="w-full flex items-center gap-2 px-3 py-1.5 rounded-md text-[13px] text-white/60 hover:text-white hover:bg-white/10 transition-colors"
+              className="w-full flex items-center gap-2 px-3 py-1.5 rounded-md text-[13px] text-ink-secondary hover:text-ink hover:bg-surface-hover transition-colors"
             >
               <Plus size={14} />
               <span>New Category</span>
             </button>
           </div>
         )}
-        <div className="p-3 border-t border-white/10">
+        <div className="p-3 border-t border-line">
           <button
             type="button"
             onClick={handleSignOut}
             disabled={isSigningOut}
-            className="w-full flex items-center gap-2 px-3 py-1.5 rounded-md text-[13px] text-white/60 hover:text-white hover:bg-white/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full flex items-center gap-2 px-3 py-1.5 rounded-md text-[13px] text-ink-secondary hover:text-slack-red hover:bg-surface-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <LogOut size={14} />
             <span>{isSigningOut ? 'Signing Out...' : 'Sign Out'}</span>
@@ -1040,10 +1034,10 @@ export default function Dashboard({ initialCategories, initialLibraryItems, init
                         <div
                           ref={provided.innerRef}
                           {...provided.draggableProps}
-                          className="flex flex-col bg-surface dark:bg-surface rounded-2xl border border-line p-5 shadow-sm"
+                          className="flex flex-col bg-surface rounded-2xl border border-line p-5 shadow-sm"
                         >
                           <div className="flex justify-between items-center mb-3 group/header">
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2 min-w-0">
                               <div
                                 {...provided.dragHandleProps}
                                 className="text-ink-muted hover:text-ink-secondary cursor-grab active:cursor-grabbing opacity-0 group-hover/header:opacity-100 transition-opacity"
@@ -1051,6 +1045,7 @@ export default function Dashboard({ initialCategories, initialLibraryItems, init
                                 <GripVertical size={14} />
                               </div>
                               <h2 className="text-xs font-bold text-ink-secondary uppercase tracking-wide">{category.name}</h2>
+                              <span className="text-[11px] text-ink-muted whitespace-nowrap">{category.links.length}</span>
                             </div>
                             <div className="flex gap-2">
                               <button
@@ -1085,13 +1080,12 @@ export default function Dashboard({ initialCategories, initialLibraryItems, init
                               </button>
                             </div>
                           </div>
-
                           <Droppable droppableId={category.id} type="link">
                             {(provided) => (
                               <div
                                 {...provided.droppableProps}
                                 ref={provided.innerRef}
-                                className="flex-1 flex flex-col gap-0.5 min-h-12"
+                                className="flex flex-col gap-0.5 min-h-12 max-h-56 overflow-y-auto pr-1"
                               >
                                 {category.links.map((link, index) => (
                                   <Draggable key={link.id} draggableId={link.id} index={index}>
