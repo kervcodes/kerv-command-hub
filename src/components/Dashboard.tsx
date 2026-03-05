@@ -85,6 +85,10 @@ export default function Dashboard({ initialCategories, initialLibraryItems, init
   );
   const categoryPanelOptions = useMemo(() => panels.filter((panel) => panel !== 'Library'), [panels]);
   const activeCategories = useMemo(() => categories.filter(c => c.panel === activePanel), [activePanel, categories]);
+  const totalLinks = useMemo(
+    () => categories.reduce((sum, category) => sum + category.links.length, 0),
+    [categories],
+  );
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -665,9 +669,10 @@ export default function Dashboard({ initialCategories, initialLibraryItems, init
 
   return (
     <DragDropContext onDragEnd={handleDragEnd}>
-      <div className="h-screen overflow-hidden flex text-sm transition-colors duration-200">
+      <div className="h-screen overflow-hidden bg-background p-3 md:p-5">
+      <div className="h-full flex text-sm transition-colors duration-200 rounded-3xl border border-line bg-background/60 shadow-sm overflow-hidden">
       {/* Sidebar - Slack-style aubergine/dark */}
-      <aside className="w-60 h-screen shrink-0 bg-slack-aubergine dark:bg-[#19171d] flex flex-col text-white/80">
+      <aside className="w-60 h-full shrink-0 bg-slack-aubergine dark:bg-slack-aubergine flex flex-col text-white/80">
         <div className="px-4 pt-4 pb-3 border-b border-white/10">
           <h1 className="text-lg font-black text-white tracking-tight">Kerv Command Hub</h1>
           <div className="mt-2">
@@ -803,17 +808,30 @@ export default function Dashboard({ initialCategories, initialLibraryItems, init
       {/* Main content area */}
       <main className="flex-1 bg-background overflow-y-auto">
         {/* Top bar */}
-        <div className="sticky top-0 z-10 bg-surface dark:bg-surface border-b border-line px-6 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="text-lg font-bold text-ink">
-              {activePanel === 'Library' ? '\uD83D\uDCDA Library' : `# ${activePanel.toLowerCase()}`}
-            </span>
+        <div className="sticky top-0 z-10 px-6 pt-6 pb-4 bg-gradient-to-b from-background via-background/95 to-background/70 backdrop-blur-sm">
+          <div className="bg-surface border border-line rounded-2xl px-5 py-4 shadow-sm flex items-center justify-between gap-4">
+            <div className="flex items-center gap-2 min-w-0">
+              <span className="text-lg font-black text-ink tracking-tight truncate">
+                {activePanel === 'Library' ? '\uD83D\uDCDA Library' : `# ${activePanel.toLowerCase()}`}
+              </span>
+            </div>
+            <div className="hidden md:flex items-center gap-2 text-xs">
+              <span className="px-2.5 py-1 rounded-full border border-line bg-background text-ink-secondary font-bold">
+                {activeCategories.length} categories
+              </span>
+              <span className="px-2.5 py-1 rounded-full border border-line bg-background text-ink-secondary font-bold">
+                {totalLinks} links
+              </span>
+              <span className="px-2.5 py-1 rounded-full border border-line bg-background text-ink-secondary font-bold">
+                {libraryItems.length} PDFs
+              </span>
+            </div>
           </div>
         </div>
 
-        <div className="p-6">
+        <div className="px-6 pb-6">
           {isAddingCategory && activePanel !== 'Library' && (
-            <div className="mb-6 p-4 bg-surface dark:bg-surface rounded-lg border border-line shadow-sm">
+            <div className="mb-6 p-5 bg-surface dark:bg-surface rounded-2xl border border-line shadow-sm">
               <div className="flex justify-between items-center mb-3">
                 <h2 className="text-sm font-bold text-ink">Add Category</h2>
                 <button onClick={() => setIsAddingCategory(false)} className="text-ink-muted hover:text-ink">
@@ -840,7 +858,7 @@ export default function Dashboard({ initialCategories, initialLibraryItems, init
           {activePanel === 'Library' ? (
             <div>
               {/* Upload controls */}
-              <div className="mb-6 p-4 bg-surface dark:bg-surface rounded-lg border border-line shadow-sm">
+              <div className="mb-6 p-5 bg-surface dark:bg-surface rounded-2xl border border-line shadow-sm">
                 <form onSubmit={handleUploadPdfs} className="flex gap-3 items-end">
                   <div className="flex-1">
                     <label className="block text-xs font-bold text-ink-secondary mb-1.5">Upload PDFs</label>
@@ -890,7 +908,7 @@ export default function Dashboard({ initialCategories, initialLibraryItems, init
               {/* Stats */}
               {libraryItems.length > 0 && (
                 <div className="mb-4 text-xs text-ink-muted font-bold">
-                  {filteredLibraryItems.length} PDFs {librarySearch && `matching "${librarySearch}"`} Â· {libraryFolders.length} folders
+                  {filteredLibraryItems.length} PDFs {librarySearch && `matching "${librarySearch}"`} · {libraryFolders.length} folders
                 </div>
               )}
 
@@ -937,7 +955,7 @@ export default function Dashboard({ initialCategories, initialLibraryItems, init
                                             <div
                                               ref={provided.innerRef}
                                               {...provided.draggableProps}
-                                              className="group flex items-center gap-2.5 p-2.5 rounded-lg border border-line bg-surface dark:bg-surface hover:bg-surface-hover hover:shadow-sm transition-all"
+                                              className="group flex items-center gap-2.5 p-2.5 rounded-xl border border-line bg-surface dark:bg-surface hover:bg-surface-hover hover:shadow-sm transition-all"
                                             >
                                               <div
                                                 {...provided.dragHandleProps}
@@ -1022,7 +1040,7 @@ export default function Dashboard({ initialCategories, initialLibraryItems, init
                         <div
                           ref={provided.innerRef}
                           {...provided.draggableProps}
-                          className="flex flex-col bg-surface dark:bg-surface rounded-lg border border-line p-4 shadow-sm"
+                          className="flex flex-col bg-surface dark:bg-surface rounded-2xl border border-line p-5 shadow-sm"
                         >
                           <div className="flex justify-between items-center mb-3 group/header">
                             <div className="flex items-center gap-2">
@@ -1145,6 +1163,7 @@ export default function Dashboard({ initialCategories, initialLibraryItems, init
           )}
         </div>
       </main>
+      </div>
 
       {/* Add Link Modal */}
       {isAddingLink && (
